@@ -1,0 +1,4 @@
+*.o
+jemalloc*
+edk2-dec/
+efiperun
