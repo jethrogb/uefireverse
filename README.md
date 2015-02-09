@@ -12,9 +12,9 @@ C-source file format.
 tree.rb
 -------
 
-A class file that will provides a Ruby tree abstraction for firmware tree on 
-your filesystem previously extracted by UEFIExtract from [UEFITOOL]. Use commit 
-bf2c9f59 or newer.
+A class file that will provides a Ruby tree abstraction for a firmware tree on 
+your filesystem previously extracted by UEFIExtract (from [UEFITool]). Use 
+UEFITool commit bf2c9f59 or newer.
 
 Other tools
 ===========
