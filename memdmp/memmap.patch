@@ -1,0 +1,69 @@
+uefireverse - Tools to help with Reverse Engineering UEFI-based firmware
+Copyright (C) 2015  Jethro G. Beekman
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+Index: memmap/memmap.c
+===================================================================
+--- memmap/memmap.c	(revision 64)
++++ memmap/memmap.c	(working copy)
+@@ -72,6 +72,26 @@
+   IN  EFI_MEMORY_TYPE   Type
+   );
+ 
++static void binout(const UINT8* p,UINTN l)
++{
++    CHAR16 outbuf[1025];
++    outbuf[1024]=0;
++    UINTN i;
++    for (i=0;i<l;i++,p++)
++    {
++        outbuf[i&0x3ff]=(*p)|0xee00;
++        if ((i&0x3ff)==0x3ff)
++        {
++            Output(outbuf);
++        }
++    }
++    if ((i&0x3ff)!=0)
++    {
++        outbuf[i]=0;
++        Output(outbuf);
++    }
++}
++
+ //
+ //
+ //
+@@ -118,6 +138,7 @@
+   SHELL_VAR_CHECK_CODE    RetCode;
+   CHAR16                  *Useful;
+   SHELL_VAR_CHECK_PACKAGE ChkPck;
++  CHAR16 stderr[128];
+ 
+   MemMap = NULL;
+   //
+@@ -226,6 +247,12 @@
+       Desc->NumberOfPages,
+       Desc->Attribute
+       );
++      
++    SPrint(stderr,128*sizeof(CHAR16),L"%s %lX-%lX  %lX %lX\n", Ptr, Desc->PhysicalStart, Desc->PhysicalStart + Bytes - 1, Desc->NumberOfPages, Desc->Attribute);
++    ST->StdErr->OutputString(ST->StdErr,stderr);
++    
++    if (Desc->Type!=EfiConventionalMemory)
++        binout((UINT8*)Desc->PhysicalStart,Bytes);
+ 
+     //
+     // count pages of each type memory
