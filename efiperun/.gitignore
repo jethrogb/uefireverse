@@ -1,0 +1,4 @@
+*.o
+jemalloc*
+acpi/
+efiperun
