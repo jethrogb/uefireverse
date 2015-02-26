@@ -28,7 +28,7 @@ known={}
 
 ARGV.each do |f|
 	guids=IO.read(f).scan(GuidRE)
-	guids.each{|v|v[1..-1]=v[1..-1].map(&:downcase)}
+	guids.each{|v|v[1..-1]=v[1..-1].map{|i|i[2..-1].to_i(16)}}
 	errors=guids.reject{|v|v[0].scan(CamelCaseRE)*""==v[0]}
 	if errors.count>0 then
 		$stderr.puts "ERRORS #{f}", errors.map{|v|v[0]}
@@ -46,18 +46,19 @@ end
 
 known.each do |k,v|
 	slens=[8,4,4,2,2,2,2,2,2,2,2]
-	strguid=(v.zip(slens).map{|i,slen|i[2..-1].rjust(slen,"0")}*"")
+	v=v.zip(slens).map{|i,slen|"%0#{slen}x"%i}
+	strguid=v*""
 	[20,16,12,8].each{|n|strguid[n,0]="-"}
-	puts "EFI_GUID g#{k}Guid = { #{v[0..2]*", "}, { #{v[3..10]*", "} } }; // #{strguid}"
+	puts "static EFI_GUID g#{k}Guid = { 0x#{v[0..2]*", 0x"}, { 0x#{v[3..10]*", 0x"} } }; // #{strguid}"
 end
 puts <<EOT
 
 typedef struct {
-    EFI_GUID* guid;
-    const char* name;
+	EFI_GUID* guid;
+	const char* name;
 } guid_name;
 
-guid_name g_guid_names[]={
+static guid_name g_guid_names[]={
 EOT
 known.map{|k,v|["g#{k}Guid",k.scan(CamelCaseRE).map{|s|s.upcase}*"_"]}.each{|a,b|puts"{&#{a}, \"#{b}\"},"}
 puts <<EOT
