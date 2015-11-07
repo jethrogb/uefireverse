@@ -194,10 +194,23 @@ EFI_STATUS EFIAPI GetVariable(IN CHAR16 *VariableName, IN EFI_GUID *VendorGuid, 
 	if (VendorGuid==NULL) return EFI_INVALID_PARAMETER;
 	if (DataSize==NULL) return EFI_INVALID_PARAMETER;
 	if (Data==NULL) return EFI_INVALID_PARAMETER;
-	fprintf(stdout,"IGNORE: GetVariable Vendor %s, ",guid_string(VendorGuid));
+
+	UINTN data_size;
+	UINT32 attributes;
+	void* data=get_variable(VendorGuid,VariableName,&data_size,&attributes);
+
+	fprintf(stdout,"GetVariable Vendor %s, ",guid_string(VendorGuid));
 	char16_print("Variable name:",VariableName);
-	
-	return EFI_NOT_FOUND;
+
+	if (data!=NULL)
+	{
+		if ((attributes&EFI_VARIABLE_RUNTIME_ACCESS)==0) return EFI_NOT_FOUND;
+		if (*DataSize<data_size) return EFI_BUFFER_TOO_SMALL;
+		memcpy(Data,data,data_size);
+		if (Attributes!=NULL) *Attributes=attributes;
+	}
+	else
+		return EFI_NOT_FOUND;
 }
 
 EFI_STATUS EFIAPI SetVariable(IN CHAR16 *VariableName, IN EFI_GUID *VendorGuid, IN UINT32 Attributes, IN UINTN DataSize, IN VOID *Data)

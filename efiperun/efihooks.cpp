@@ -26,6 +26,7 @@ using std::list;
 using std::unordered_multimap;
 using std::pair;
 using std::make_pair;
+using std::char_traits;
 
 // Seriously, there is no default way to do this?
 template<class Iter>
@@ -124,6 +125,12 @@ typedef struct {
 	VOID*                    Unload;
 } EFI_LOADED_IMAGE_PROTOCOL;
 
+typedef struct {
+	void* data;
+	UINTN data_size;
+	UINT32 attributes;
+} variable_data;
+
 EFI_SYSTEM_TABLE g_efi_system_table={};
 static SIMPLE_INPUT_INTERFACE g_efi_system_table_ConIn={};
 static SIMPLE_TEXT_OUTPUT_INTERFACE g_efi_system_table_ConOut={};
@@ -144,6 +151,7 @@ static EFI_LOADED_IMAGE_PROTOCOL g_efi_loaded_image_protocol={};
 
 static list<GenericHook<const char*>> g_str_hooks;
 static unordered_multimap<EFI_GUID,pair<EFI_HANDLE,void*>> g_interfaces;
+static unordered_multimap<EFI_GUID,pair<CHAR16*,variable_data*>> g_variables;
 
 #include "efi_guid.c"
 
@@ -275,6 +283,37 @@ intptr_t count_handles(EFI_GUID* guid)
 void install_protocol(EFI_GUID* guid,EFI_HANDLE handle,void* interface)
 {
 	g_interfaces.emplace(*guid,make_pair(handle,interface));
+}
+
+void* get_variable(EFI_GUID* guid,CHAR16* name,UINTN* data_size,UINT32 *attributes=NULL)
+{
+	unsigned int name_len = char_traits<char16_t>::length((char16_t*)name);
+	for (auto& elem : as_range(g_variables.equal_range(*guid)))
+	{
+		auto& el_name=elem.second.first;
+		auto& el_var_data=elem.second.second;
+		unsigned int el_name_len = char_traits<char16_t>::length((char16_t*)el_name);
+		if (el_name_len==name_len && memcmp(el_name,name,name_len*sizeof(char16_t))==0)
+		{
+			if (data_size) *data_size=el_var_data->data_size;
+			if (attributes) *attributes=el_var_data->attributes;
+			return el_var_data->data;
+		}
+	}
+	return NULL;
+}
+
+void set_variable(EFI_GUID* guid,const CHAR16* name,void* data,UINTN data_size,UINT32 attributes=EFI_VARIABLE_RUNTIME_ACCESS)
+{
+	unsigned int var_name_len_bytes = char_traits<char16_t>::length((char16_t*)name)*sizeof(char16_t);
+	CHAR16* var_name = (CHAR16*)malloc(var_name_len_bytes);
+	memcpy(var_name,name,var_name_len_bytes);
+	variable_data* var_data = new variable_data;
+	var_data->data=malloc(data_size);
+	memcpy(var_data->data,data,data_size);
+	var_data->data_size = data_size;
+	var_data->attributes=attributes;
+	g_variables.emplace(*guid,make_pair(var_name,var_data));
 }
 
 void char16_print(const char* prefix, CHAR16* str)
