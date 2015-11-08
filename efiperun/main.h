@@ -45,6 +45,8 @@ void log_protocol(const char* type,EFI_GUID* guid);
 void* find_protocol(EFI_GUID* guid,EFI_HANDLE handle);
 void install_protocol(EFI_GUID* guid,EFI_HANDLE handle,void* interface);
 intptr_t count_handles(EFI_GUID* guid);
+void* get_variable(EFI_GUID* guid,CHAR16* name,UINTN* data_size,UINT32* attributes);
+void set_variable(EFI_GUID* guid,const CHAR16* name,void* data,UINTN data_size,UINT32 attributes);
 void char16_print(const char* prefix, CHAR16* str);
 void* get_smst();
 
