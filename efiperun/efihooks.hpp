@@ -34,7 +34,7 @@ template<typename T> class __attribute__((__packed__)) GenericHook
 	T data;
 	/* code */
 	// This calls m_pfn(&data,...) via fix_hook()
-	unsigned char op1[3];      // lea IND32(%rip),%rcx     4c 8d 15
+	unsigned char op1[3];      // lea IND32(%rip),%r10     4c 8d 15
 	int op1Index;
 	unsigned char op2[2];      // movabs IMM64,%rax        48 b8
 	unsigned long long op2Imm;
