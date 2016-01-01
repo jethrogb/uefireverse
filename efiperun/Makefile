@@ -5,6 +5,7 @@ CCFLAGS=$(CFLAGS) -std=gnu99
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=
 LIBS=-lpthread
+JEMALLOC=jemalloc-3.6.0
 
 SOURCES=peloader.c efiperun.cpp efihooks.cpp stubs.cpp debugmodule_example.cpp vast/filesystem.cpp
 OBJECTS=stubs.o peloader.o efiperun.o efihooks.o debugmodule_example.o vast/filesystem.o jemalloc_custom.a
@@ -26,8 +27,8 @@ stubs.cpp: jemalloc_custom.h
 clean:
 	rm -f $(OBJECTS) $(OUTPUT)
 
-jemalloc_custom.h:
-	cp jemalloc-3.6.0/include/jemalloc/jemalloc.h jemalloc_custom.h
+jemalloc_custom.h: jemalloc_custom.a $(JEMALLOC)/include/jemalloc/jemalloc.h
+	cp $(JEMALLOC)/include/jemalloc/jemalloc.h jemalloc_custom.h
 
-jemalloc_custom.a:
-	objcopy --redefine-sym mmap=wrapped_mmap jemalloc-3.6.0/lib/libjemalloc_pic.a jemalloc_custom.a 
+jemalloc_custom.a: $(JEMALLOC)/lib/libjemalloc_pic.a
+	objcopy --redefine-sym mmap=wrapped_mmap $(JEMALLOC)/lib/libjemalloc_pic.a jemalloc_custom.a
