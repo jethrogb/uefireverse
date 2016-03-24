@@ -170,11 +170,11 @@ loadinfo load_pe(int fd)
 		}
 	}
 	
-	free(pebuf);
 	ret.mmap_base=memptr;
 	ret.mmap_length=size;
 	ret.image_base=pbase;
 	ret.entry_point=pbase+oh(AddressOfEntryPoint);
+	free(pebuf);
 	return ret;
 error:
 	if (memptr!=0 && memptr!=MAP_FAILED) munmap(memptr,size);
